@@ -1,10 +1,9 @@
-var Promise = function(fn) {
+var Promise = function (fn) {
     this.result = undefined;
     this.state = 'pending';
     this.queue_fullfield = [];
     this.queue_reject = [];
     this.resolve = (value) => {
-        //console.log('resolve',this.state,value);
         if (this.state !== 'pending') return;
         this.result = value;
         this.state = 'fulfilled';
@@ -16,7 +15,6 @@ var Promise = function(fn) {
         return this;
     };
     this.reject = (err) => {
-        //console.log('reject',this.state,err,this.result);
         if (this.state !== 'pending') return;
         this.state = 'rejected';
         this.result = err;
@@ -32,14 +30,15 @@ var Promise = function(fn) {
 
 Promise.prototype = {
     then: function(onFulfilled, onRejected) {
-        var newP = new Promise(function(){});
         var thes = this;
+        var newP = new Promise(function(resolve, reject) {
+            setTimeout(function() {});
+        });
     
         var fulfilledFunc;
         if (typeof onFulfilled === 'function') {
-            fulfilledFunc = function () {                
-                var res = onFulfilled(thes.result);
-                newP.resolve(res);
+            fulfilledFunc = function () {
+                newP.resolve(onFulfilled(thes.result));
             };
         } else {
             fulfilledFunc = function () {
@@ -50,9 +49,7 @@ Promise.prototype = {
         var rejectedFunc;
         if (typeof onRejected === 'function') {
             rejectedFunc = function () {
-                //console.log('onRejected',thes.result);
-                var res = onRejected(thes.result);
-                newP.resolve(res);
+                newP.reject(onRejected(thes.result));
             };
         } else {
             rejectedFunc = function () {
@@ -60,13 +57,12 @@ Promise.prototype = {
             }   
         };
         
-        //console.log(this.state,onFulfilled,onRejected);
         if (this.state === 'pending') {
             this.queue_fullfield.push(fulfilledFunc);
             this.queue_reject.push(rejectedFunc);
         } else if (this.state === 'fulfilled') {
             setTimeout(fulfilledFunc);
-        } else {
+        } else if (this.state === 'rejected') {
             setTimeout(rejectedFunc);
         }
         return newP;
@@ -87,7 +83,11 @@ var prom = new Promise(function(resolve, reject) {
 
 // prom.resolve('ollolo');
 // prom.reject('emmmsad');
-prom.then(res => console.log(res), res => alert(res+" then!"));
-prom.catch(res => alert(res+" catch!"));
+prom.then(res => { console.log(res+" then 1 resolve!"); return res+" then 1 resolve!"; }, 
+          res => { console.log(res+" then 1 reject!"); return res+" then 1 reject!"; })
+    .then(res => { console.log(res+" then 2 resolve!"); return res+" then 2 resolve!"; }, 
+          res => { console.log(res+" then 2 reject!"); return res+" then 2 reject!"; })
+    .catch(res => { console.log(res+" catch!"); return ; res+" catch!"});
+//prom.catch(res => alert(res+" catch!"));
 //.then(res => alert(res))
 /*prom.then(function(){console.log("success")},function(){console.log("err")}).then(function(){console.log("success2")},function(){console.log("err2")});*/
